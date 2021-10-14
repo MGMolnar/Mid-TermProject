@@ -1,0 +1,98 @@
+#include <Adafruit_LSM303_Accel.h>
+#include <Adafruit_Sensor.h>
+#include <Wire.h>
+
+Adafruit_LSM303_Accel_Unified accel = Adafruit_LSM303_Accel_Unified(54321);
+
+bool begin;
+float startingValues[20];
+int amountOfStoredValues;
+float meanRotation;
+
+void setup(void) {
+
+begin = false;
+amountOfStoredValues = 0;
+meanRotation = 0;
+
+#ifndef ESP8266
+  while (!Serial)
+    ; // will pause Zero, Leonardo, etc until serial console opens
+#endif
+  Serial.begin(9600);
+  Serial.println("Adafruit LSM303 Accelerometer Test");
+  Serial.println("");
+  /* Initialise the sensor */
+  if (!accel.begin()) {
+    /* There was a problem detecting the ADXL345 ... check your connections */
+    Serial.println("Ooops, no LSM303 detected ... Check your wiring!");
+    while (100)
+      ;
+  }
+  accel.setRange(LSM303_RANGE_4G);
+}
+void loop(void) {
+
+  if(!begin){
+    calculateMean();
+  }
+
+  CalculateTilt();
+  
+  /* Get a new sensor event */
+  sensors_event_t event;
+  accel.getEvent(&event);
+  
+  //Serial.println(int(event.orientation.heading));
+  /* delay to keep things stable */
+  delay(100);
+}
+
+
+//Will caluclate the mean starting point average
+//Using 20 rotational values
+void calculateMean(){
+
+  sensors_event_t event;
+  accel.getEvent(&event);
+
+  while(amountOfStoredValues < 20){
+    startingValues[amountOfStoredValues] = event.orientation.heading;
+    amountOfStoredValues++;
+  }
+
+  for(int i =0; i < amountOfStoredValues; i++){
+    meanRotation += startingValues[i];
+  }
+
+  
+  meanRotation = meanRotation / amountOfStoredValues;
+  begin = true;
+}
+
+//Method that will caluclate the current 
+//rotation and depending on the that rotation
+//comparrison to the mean it will send a serial ouput to processing
+void CalculateTilt(){
+    sensors_event_t event;
+    accel.getEvent(&event);
+    
+    //get the current rotation and check it between the 3 different checkpoints past
+    //past the mean value
+    float currentRotation = event.orientation.heading;
+
+    if( currentRotation < (meanRotation - .5)){
+      Serial.println("tiltDetected");
+    }
+
+//Code that was not implemented as it made the audio files become inaudible
+//    if((meanRotation - 1.25) < currentRotation && currentRotation < (meanRotation - .5)){
+//      Serial.println("smalltilt");
+//    }
+//    else if((meanRotation - 2.25) < currentRotation && currentRotation < (meanRotation - 1.5)){
+//      Serial.println("mediumtilt");
+//    }
+//    else if( currentRotation < (meanRotation - 2.5)){
+//      Serial.println("largetilt");
+//    }
+}

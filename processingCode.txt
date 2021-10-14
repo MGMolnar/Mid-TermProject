@@ -1,0 +1,94 @@
+import processing.sound.*;
+import processing.serial.*;
+
+//SoundFile waveSounds;
+//SoundFile birdSounds;
+//SoundFile rainSounds;
+SoundFile file; //The sound file that will be played when enough tilt happens
+ 
+Serial myPort;  // Create object from Serial class
+String val;      // Data received from the serial port
+String previousData; //will check the previous data to 
+                      //make sure sound files are not always being updated
+
+void setup() 
+{
+  String portName = Serial.list()[0];
+  myPort = new Serial(this, portName, 9600);
+  previousData = null;
+  //waveSounds = new SoundFile(this, "wavesCrashing.wav");
+  //rainSounds = new SoundFile(this, "rainFall.wav");
+  //birdSounds = new SoundFile(this, "birdCalling.wav");
+  file = null;
+}
+
+//Will update and read new strings from the the port.
+//It will then take that information to playAudio() which will 
+//parse it and decide what audio files to play
+void draw()
+{
+  val = myPort.readStringUntil('\n');
+  playAudio();
+}
+
+//Will parse the value in coming from the arduino and then
+//decide which audio file to play.
+void playAudio(){
+   
+ //if null do not play any audio
+ if(val == null){
+   previousData = null;
+   return;
+ }
+  
+  //trim the sides so it is one word
+  val = val.trim();
+  
+  //if current value equals previous data
+  //do not update audio files
+  if(val.equals(previousData)){
+    return;
+  }
+  
+  if(val.equals("tiltDetected")){
+   if(file != null)
+     file.stop();
+     file = new SoundFile(this, "rainforest.wav");
+      file.play();
+      previousData = val; 
+  }
+  
+  //Code was removed as the audio files became inaudible
+  //Switch statements that will play audio files
+  //based upon the string value that was passed in from
+  //the arduino file.
+  //switch(val){
+  //  //small tilt will play birds calling audio file.
+  //  case "smalltilt":
+  //    //DO NOT STOP FILE IF THERE IS NO FILE TO BEGIN WITH
+  //    if(file != null)
+  //      file.stop();
+  //    file = new SoundFile(this, "birdCalling.wav"); //get file
+  //    file.play(); //play the file
+  //    previousData = val; //update the previous data
+  //    break;
+  //  //medium tilt will play rain fall audio files
+  //  case "mediumtilt":
+  //    //DO NOT STOP FILE IF THERE IS NO FILE TO BEGIN WITH
+  //    if(file != null)
+  //      file.stop();
+  //    file = new SoundFile(this, "rainFall.wav");
+  //    file.play();
+  //    previousData = val;
+  //    break;
+  //  //large tilt will play waves crashing 
+  //  case "largetilt":
+  //    //DO NOT STOP FILE IF THERE IS NO FILE TO BEGIN WITH
+  //    if(file != null)
+  //      file.stop();
+  //    file = new SoundFile(this, "wavesCrashing.wav");
+  //    file.play();
+  //    previousData = val;
+  //    break;
+  //}
+}
