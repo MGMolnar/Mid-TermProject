@@ -13,7 +13,7 @@ String previousData; //will check the previous data to
 
 void setup() 
 {
-  String portName = Serial.list()[0];
+  String portName = Serial.list()[1];
   myPort = new Serial(this, portName, 9600);
   previousData = null;
   //waveSounds = new SoundFile(this, "wavesCrashing.wav");
@@ -28,34 +28,40 @@ void setup()
 void draw()
 {
   val = myPort.readStringUntil('\n');
+  
   playAudio();
 }
 
 //Will parse the value in coming from the arduino and then
 //decide which audio file to play.
 void playAudio(){
-   
+  
  //if null do not play any audio
  if(val == null){
-   previousData = null;
    return;
  }
   
   //trim the sides so it is one word
   val = val.trim();
   
+  println(val);
+  
+  //This commented out code was moved form processing to 
+  //Arduino as processing was having an issue with checking val with previousData
   //if current value equals previous data
   //do not update audio files
-  if(val.equals(previousData)){
-    return;
-  }
+  //if(val == previousData){
+  //  println("no");
+  //  return;
+  //}
   
+  //if there is a tilt stop the file and play it from the beginning
   if(val.equals("tiltDetected")){
-   if(file != null)
-     file.stop();
+   if(file != null){
+        file.stop();
+   }
      file = new SoundFile(this, "rainforest.wav");
       file.play();
-      previousData = val; 
   }
   
   //Code was removed as the audio files became inaudible
