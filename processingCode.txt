@@ -55,7 +55,7 @@ void playAudio(){
      file.stop();
      file = new SoundFile(this, "rainforest.wav");
       file.play();
-      previousData = val; 
+      previousData = "tiltDetected"; 
   }
   
   //Code was removed as the audio files became inaudible
