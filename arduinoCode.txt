@@ -8,12 +8,14 @@ bool begin;
 float startingValues[20];
 int amountOfStoredValues;
 float meanRotation;
+bool prevDataTilt;
 
 void setup(void) {
 
 begin = false;
 amountOfStoredValues = 0;
 meanRotation = 0;
+prevDataTilt = false;
 
 #ifndef ESP8266
   while (!Serial)
@@ -55,7 +57,7 @@ void calculateMean(){
 
   sensors_event_t event;
   accel.getEvent(&event);
-
+  
   while(amountOfStoredValues < 20){
     startingValues[amountOfStoredValues] = event.orientation.heading;
     amountOfStoredValues++;
@@ -81,8 +83,14 @@ void CalculateTilt(){
     //past the mean value
     float currentRotation = event.orientation.heading;
 
-    if( currentRotation < (meanRotation - .5)){
+    //if there is a tilt send out on message of a tilt being detected.
+    //If there is no tilt change the previous data tilt back to false since there was no tilt.
+    if( currentRotation < (meanRotation - .5) && !prevDataTilt ){
       Serial.println("tiltDetected");
+      prevDataTilt = true;
+    }
+    else if(currentRotation > (meanRotation - .5)){
+      prevDataTilt = false;
     }
 
 //Code that was not implemented as it made the audio files become inaudible
